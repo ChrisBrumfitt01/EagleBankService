@@ -1,8 +1,11 @@
 package com.eagle.EagleBankService.service;
 
+import com.eagle.EagleBankService.dto.UpdateUserRequest;
 import com.eagle.EagleBankService.dto.UserRequest;
 import com.eagle.EagleBankService.dto.UserResponse;
 import com.eagle.EagleBankService.entity.UserEntity;
+import com.eagle.EagleBankService.exception.ForbiddenException;
+import com.eagle.EagleBankService.exception.NotFoundException;
 import com.eagle.EagleBankService.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,12 +15,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class UserServiceTest {
@@ -59,6 +63,71 @@ public class UserServiceTest {
         verify(passwordEncoder).encode(PASSWORD);
         verify(userRepository).save(any(UserEntity.class));
     }
+
+    @Test
+    public void updateUser_shouldUpdateUser_whenUserOwnsAccount() {
+        UUID userId = UUID.randomUUID();
+        String oldEmail = "oldemail@test.com";
+        UserEntity user = UserEntity.builder()
+                .id(userId)
+                .email(oldEmail)
+                .fullName("Old Name")
+                .password("Old-password")
+                .build();
+
+        UpdateUserRequest updateRequest = new UpdateUserRequest(FULL_NAME, EMAIL, PASSWORD);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(userRepository.save(any(UserEntity.class))).thenReturn(user);
+
+        UserResponse result = userService.updateUser(userId, updateRequest, oldEmail);
+
+        assertThat(result.getFullName()).isEqualTo(FULL_NAME);
+        assertThat(result.getEmail()).isEqualTo(EMAIL);
+        verify(userRepository).save(any(UserEntity.class));
+    }
+
+    @Test
+    void updateUser_shouldThrowNotFound_whenUserDoesNotExist() {
+        UUID userId = UUID.randomUUID();
+        String oldEmail = "oldemail@test.com";
+        UserEntity user = UserEntity.builder()
+                .id(userId)
+                .email(oldEmail)
+                .fullName("Old Name")
+                .password("Old-password")
+                .build();
+
+        UpdateUserRequest updateRequest = new UpdateUserRequest(FULL_NAME, EMAIL, PASSWORD);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+        assertThrows(NotFoundException.class, () -> {
+            userService.updateUser(userId, updateRequest, oldEmail);
+        });
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void updateUser_shouldThrowForbidden_whenUserDoesNotOwnAccount() {
+        UUID userId = UUID.randomUUID();
+        String oldEmail = "oldemail@test.com";
+        UserEntity user = UserEntity.builder()
+                .id(userId)
+                .email(oldEmail)
+                .fullName("Old Name")
+                .password("Old-password")
+                .build();
+
+        UpdateUserRequest updateRequest = new UpdateUserRequest(FULL_NAME, EMAIL, PASSWORD);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        assertThrows(ForbiddenException.class, () -> {
+            userService.updateUser(userId, updateRequest, EMAIL);
+        });
+        verify(userRepository, never()).save(any());
+    }
+
+
 }
 
 

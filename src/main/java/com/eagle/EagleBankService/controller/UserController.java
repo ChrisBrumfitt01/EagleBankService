@@ -1,5 +1,6 @@
 package com.eagle.EagleBankService.controller;
 
+import com.eagle.EagleBankService.dto.UpdateUserRequest;
 import com.eagle.EagleBankService.dto.UserRequest;
 import com.eagle.EagleBankService.dto.UserResponse;
 import com.eagle.EagleBankService.service.UserService;
@@ -7,10 +8,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/v1/users")
@@ -23,6 +24,16 @@ public class UserController {
     public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserRequest request) {
         UserResponse response = userService.createUser(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @PatchMapping("/{userId}")
+    public ResponseEntity<UserResponse> updateUser(@PathVariable UUID userId,
+                                                   @Valid @RequestBody UpdateUserRequest request,
+                                                   Authentication authentication) {
+
+        String authenticatedEmail = (String) authentication.getPrincipal();
+        UserResponse response = userService.updateUser(userId, request, authenticatedEmail);
+        return ResponseEntity.ok(response);
     }
 
 }
