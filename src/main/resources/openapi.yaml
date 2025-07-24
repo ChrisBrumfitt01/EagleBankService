@@ -12,6 +12,30 @@ tags:
   - name: user
     description: Manage a user
 paths:
+  /v1/auth/login:
+    post:
+      tags:
+        - auth
+      description: Authenticate a user
+      operationId: authUser
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Authenticate a user
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthenticationRequest'
+        required: true
+      responses:
+        '200':
+          description: User authenticated successfully
+          content:
+            application/json:
+              schema:
+                type: string
+        '401':
+          description: Invalid credentials
   /v1/accounts:
     post:
       tags:
