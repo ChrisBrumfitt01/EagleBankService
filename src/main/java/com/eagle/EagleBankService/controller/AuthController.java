@@ -1,5 +1,6 @@
 package com.eagle.EagleBankService.controller;
 
+import com.eagle.EagleBankService.dto.AuthResponse;
 import com.eagle.EagleBankService.dto.AuthenticationRequest;
 import com.eagle.EagleBankService.util.JwtUtil;
 import jakarta.validation.Valid;
@@ -26,7 +27,7 @@ public class AuthController {
     private JwtUtil jwtUtils;
 
     @PostMapping("/login")
-    public ResponseEntity<String> authenticateUser(@Valid @RequestBody AuthenticationRequest authRequest) {
+    public ResponseEntity<AuthResponse> authenticateUser(@Valid @RequestBody AuthenticationRequest authRequest) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         authRequest.getEmail(),
@@ -35,7 +36,7 @@ public class AuthController {
         );
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         String token = jwtUtils.generateToken(userDetails.getUsername());
-        return ResponseEntity.ok(token);
+        return ResponseEntity.ok(new AuthResponse(token));
     }
 
 }

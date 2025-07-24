@@ -33,7 +33,7 @@ paths:
           content:
             application/json:
               schema:
-                type: string
+                $ref: '#/components/schemas/AuthResponse'
         '401':
           description: Invalid credentials
   /v1/accounts:
