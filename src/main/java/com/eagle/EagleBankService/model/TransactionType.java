@@ -1,4 +1,4 @@
-package com.eagle.EagleBankService.dto;
+package com.eagle.EagleBankService.model;
 
 public enum TransactionType {
     DEPOSIT,

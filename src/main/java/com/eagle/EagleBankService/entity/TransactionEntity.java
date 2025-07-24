@@ -1,6 +1,6 @@
 package com.eagle.EagleBankService.entity;
 
-import com.eagle.EagleBankService.dto.TransactionType;
+import com.eagle.EagleBankService.model.TransactionType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
