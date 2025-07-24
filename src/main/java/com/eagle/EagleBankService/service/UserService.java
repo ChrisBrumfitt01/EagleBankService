@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -30,5 +32,9 @@ public class UserService {
                 .fullName(user.getFullName())
                 .email(user.getEmail())
                 .build();
+    }
+
+    public Optional<UserEntity> findUserByEmail(String email){
+        return userRepository.findByEmail(email);
     }
 }
