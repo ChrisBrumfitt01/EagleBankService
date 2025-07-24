@@ -1,5 +1,6 @@
 package com.eagle.EagleBankService.controller;
 
+import com.eagle.EagleBankService.config.TestSecurityConfig;
 import com.eagle.EagleBankService.dto.UserRequest;
 import com.eagle.EagleBankService.dto.UserResponse;
 import com.eagle.EagleBankService.service.UserService;
@@ -7,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -19,6 +21,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(UserController.class)
+@Import(TestSecurityConfig.class)
 public class UserControllerTest {
 
     private static final String FULL_NAME = "Joe Bloggs";
@@ -41,7 +44,7 @@ public class UserControllerTest {
 
         when(userService.createUser(any(UserRequest.class))).thenReturn(response);
 
-        mockMvc.perform(post("/users")
+        mockMvc.perform(post("/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -53,7 +56,7 @@ public class UserControllerTest {
     void createUser_shouldReturn400_whenMissingFullName() throws Exception {
         UserRequest invalidRequest = new UserRequest("", EMAIL, PASSWORD);
 
-        mockMvc.perform(post("/users")
+        mockMvc.perform(post("/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
@@ -65,7 +68,7 @@ public class UserControllerTest {
     void createUser_shouldReturn400_whenMissingEmail() throws Exception {
         UserRequest invalidRequest = new UserRequest(FULL_NAME, "", PASSWORD);
 
-        mockMvc.perform(post("/users")
+        mockMvc.perform(post("/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
@@ -77,7 +80,7 @@ public class UserControllerTest {
     void createUser_shouldReturn400_whenEmailIsInvalidFormat() throws Exception {
         UserRequest invalidRequest = new UserRequest(FULL_NAME, "Invalid", PASSWORD);
 
-        mockMvc.perform(post("/users")
+        mockMvc.perform(post("/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
@@ -89,7 +92,7 @@ public class UserControllerTest {
     void createUser_shouldReturn400_whenMissingPassword() throws Exception {
         UserRequest invalidRequest = new UserRequest(FULL_NAME, EMAIL, "");
 
-        mockMvc.perform(post("/users")
+        mockMvc.perform(post("/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
