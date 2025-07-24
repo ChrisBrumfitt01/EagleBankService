@@ -4,6 +4,7 @@ import com.eagle.EagleBankService.dto.UpdateUserRequest;
 import com.eagle.EagleBankService.dto.UserRequest;
 import com.eagle.EagleBankService.dto.UserResponse;
 import com.eagle.EagleBankService.entity.UserEntity;
+import com.eagle.EagleBankService.exception.ConflictException;
 import com.eagle.EagleBankService.exception.ForbiddenException;
 import com.eagle.EagleBankService.exception.NotFoundException;
 import com.eagle.EagleBankService.repository.UserRepository;
@@ -39,13 +40,7 @@ public class UserService {
     }
 
     public UserResponse updateUser(UUID userId, UpdateUserRequest request, String authenticatedEmail){
-        UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException(String.format("User not found with the ID: %s", userId)));
-
-        if (!user.getEmail().equals(authenticatedEmail)) {
-            throw new ForbiddenException("You are forbidden to update this user");
-        }
-
+        UserEntity user = findUserAndValidate(userId, authenticatedEmail);
         user.setFullName(request.getFullName());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -59,7 +54,25 @@ public class UserService {
                 .build();
     }
 
+    public void deleteUser(UUID userId, String authenticatedEmail){
+        UserEntity user = findUserAndValidate(userId, authenticatedEmail);
+        if(!user.getAccounts().isEmpty()){
+            throw new ConflictException("Cannot delete a user that has accounts");
+        }
+
+        userRepository.delete(user);
+    }
+
     public Optional<UserEntity> findUserByEmail(String email){
         return userRepository.findByEmail(email);
+    }
+
+    private UserEntity findUserAndValidate(UUID userId, String authenticatedEmail) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException(String.format("User not found with the ID: %s", userId)));
+        if (!user.getEmail().equals(authenticatedEmail)) {
+            throw new ForbiddenException("Operation forbidden: Different user");
+        }
+        return user;
     }
 }

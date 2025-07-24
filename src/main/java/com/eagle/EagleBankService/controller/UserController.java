@@ -36,4 +36,13 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<Void> updateUser(@PathVariable UUID userId,
+                                                   Authentication authentication) {
+
+        String authenticatedEmail = (String) authentication.getPrincipal();
+        userService.deleteUser(userId, authenticatedEmail);
+        return ResponseEntity.ok().build();
+    }
+
 }
