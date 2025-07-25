@@ -23,7 +23,7 @@ public class AccountController {
     @PostMapping
     public ResponseEntity<AccountResponse> createAccount(@Valid @RequestBody AccountRequest request,
                                                          Authentication authentication) {
-        String email = (String) authentication.getPrincipal();
+        String email = authentication.getName();
         AccountResponse response = accountService.createAccount(request, email);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }

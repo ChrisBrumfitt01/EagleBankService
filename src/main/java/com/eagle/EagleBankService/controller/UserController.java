@@ -31,7 +31,7 @@ public class UserController {
                                                    @Valid @RequestBody UpdateUserRequest request,
                                                    Authentication authentication) {
 
-        String authenticatedEmail = (String) authentication.getPrincipal();
+        String authenticatedEmail = authentication.getName();
         UserResponse response = userService.updateUser(userId, request, authenticatedEmail);
         return ResponseEntity.ok(response);
     }
@@ -40,7 +40,7 @@ public class UserController {
     public ResponseEntity<Void> deleteUser(@PathVariable UUID userId,
                                            Authentication authentication) {
 
-        String authenticatedEmail = (String) authentication.getPrincipal();
+        String authenticatedEmail = authentication.getName();
         userService.deleteUser(userId, authenticatedEmail);
         return ResponseEntity.ok().build();
     }
