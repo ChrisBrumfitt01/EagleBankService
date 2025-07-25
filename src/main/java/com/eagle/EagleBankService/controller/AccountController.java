@@ -8,10 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/v1/accounts")
@@ -26,6 +25,14 @@ public class AccountController {
         String email = authentication.getName();
         AccountResponse response = accountService.createAccount(request, email);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @GetMapping("/{accountId}")
+    public ResponseEntity<AccountResponse> getAccount(@PathVariable UUID accountId,
+                                                          Authentication authentication) {
+        String email = authentication.getName();
+        AccountResponse response = accountService.getAccount(accountId, email);
+        return ResponseEntity.ok(response);
     }
 
 

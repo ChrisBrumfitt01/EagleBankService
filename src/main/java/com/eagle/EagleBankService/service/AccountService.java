@@ -4,6 +4,8 @@ import com.eagle.EagleBankService.dto.AccountRequest;
 import com.eagle.EagleBankService.dto.AccountResponse;
 import com.eagle.EagleBankService.entity.AccountEntity;
 import com.eagle.EagleBankService.entity.UserEntity;
+import com.eagle.EagleBankService.exception.ForbiddenException;
+import com.eagle.EagleBankService.exception.NotFoundException;
 import com.eagle.EagleBankService.exception.UnauthorizedException;
 import com.eagle.EagleBankService.repository.AccountRepository;
 import com.eagle.EagleBankService.util.AccountNumberGenerator;
@@ -11,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -38,6 +41,29 @@ public class AccountService {
                 .accountType(account.getAccountType())
                 .balance(account.getBalance())
                 .build();
+    }
+
+    public AccountResponse getAccount(UUID accountId, String email) {
+        UserEntity user = userService.findUserByEmail(email)
+                .orElseThrow(() -> new UnauthorizedException("Authenticated user could not be found"));
+
+        AccountEntity account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new NotFoundException("Account could not be found"));
+
+        if (!account.getUser().getId().equals(user.getId())) {
+            throw new ForbiddenException("You do not have access to this account");
+        }
+
+        return mapToResponse(account);
+    }
+
+    private AccountResponse mapToResponse(AccountEntity entity) {
+        return new AccountResponse(
+                entity.getId(),
+                entity.getAccountType(),
+                entity.getAccountNumber(),
+                entity.getBalance()
+        );
     }
 
 

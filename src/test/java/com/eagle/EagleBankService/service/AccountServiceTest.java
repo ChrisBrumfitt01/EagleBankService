@@ -5,6 +5,7 @@ import com.eagle.EagleBankService.dto.AccountResponse;
 import com.eagle.EagleBankService.entity.AccountEntity;
 import com.eagle.EagleBankService.entity.UserEntity;
 import com.eagle.EagleBankService.exception.ForbiddenException;
+import com.eagle.EagleBankService.exception.NotFoundException;
 import com.eagle.EagleBankService.exception.UnauthorizedException;
 import com.eagle.EagleBankService.repository.AccountRepository;
 import com.eagle.EagleBankService.util.AccountNumberGenerator;
@@ -29,6 +30,7 @@ import static org.mockito.Mockito.*;
 public class AccountServiceTest {
 
     private static final UUID USER_ID = UUID.randomUUID();
+    private static final UUID ACCOUNT_ID = UUID.randomUUID();
     private static final String EMAIL = "joe@test.com";
     private static final String ACCOUNT_NUMBER = "12345678";
     private static final String ACCOUNT_TYPE = "Savings";
@@ -68,6 +70,64 @@ public class AccountServiceTest {
         verify(accountRepository, never()).save(any());
     }
 
+    @Test
+    public void getAccount_shouldRetrieveAndReturnAccount() {
+        UserEntity user = buildUser();
+        AccountEntity savedAccount = AccountEntity.builder()
+                .id(ACCOUNT_ID)
+                .user(user)
+                .accountType(ACCOUNT_TYPE)
+                .accountNumber(ACCOUNT_NUMBER)
+                .balance(BigDecimal.TEN)
+                .build();
+
+        when(userService.findUserByEmail(EMAIL)).thenReturn(Optional.of(user));
+        when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.ofNullable(savedAccount));
+
+        AccountResponse response = accountService.getAccount(ACCOUNT_ID, EMAIL);
+        assertThat(response.getId()).isEqualTo(ACCOUNT_ID);
+        assertThat(response.getAccountNumber()).isEqualTo(ACCOUNT_NUMBER);
+        assertThat(response.getAccountType()).isEqualTo(ACCOUNT_TYPE);
+        assertThat(response.getBalance()).isEqualTo(BigDecimal.TEN);
+    }
+
+    @Test
+    public void getAccount_shouldThrowUnauthorized_whenUserNotFound() {
+        when(userService.findUserByEmail(EMAIL)).thenReturn(Optional.empty());
+        assertThrows(UnauthorizedException.class, () -> {
+            accountService.getAccount(ACCOUNT_ID, EMAIL);
+        });
+    }
+
+    @Test
+    public void getAccount_shouldThrowNotFoundException_whenAccountIDNotFound() {
+        UserEntity user = buildUser();
+
+        when(userService.findUserByEmail(EMAIL)).thenReturn(Optional.of(user));
+        when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.empty());
+        assertThrows(NotFoundException.class, () -> {
+            accountService.getAccount(ACCOUNT_ID, EMAIL);
+        });
+    }
+
+    @Test
+    public void getAccount_shouldThrowForbiddenException_whenUserIdDoesNotMatch() {
+        UserEntity authorizedUser = buildUser();
+        UserEntity otherUser = UserEntity.builder().id(UUID.randomUUID()).build();
+        AccountEntity savedAccount = AccountEntity.builder()
+                .id(ACCOUNT_ID)
+                .user(otherUser)
+                .accountType(ACCOUNT_TYPE)
+                .accountNumber(ACCOUNT_NUMBER)
+                .balance(BigDecimal.TEN)
+                .build();
+
+        when(userService.findUserByEmail(EMAIL)).thenReturn(Optional.of(authorizedUser));
+        when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.ofNullable(savedAccount));
+        assertThrows(ForbiddenException.class, () -> {
+            accountService.getAccount(ACCOUNT_ID, EMAIL);
+        });
+    }
 
     private UserEntity buildUser() {
         return UserEntity.builder()
