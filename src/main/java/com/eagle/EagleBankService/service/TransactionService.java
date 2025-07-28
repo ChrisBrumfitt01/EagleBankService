@@ -28,6 +28,7 @@ public class TransactionService {
 
     private final TransactionStrategyFactory strategyFactory;
     private final UserService userService;
+    private final AccountService accountService;
     private final AccountRepository accountRepository;
     @Transactional
     public CreatedTransactionResponse createTransaction(UUID accountId, String email, TransactionRequest request) {
@@ -38,11 +39,7 @@ public class TransactionService {
     public TransactionsResponse getAllTransactions(UUID accountId, String email) {
         UserEntity user = userService.findUserByEmail(email)
                 .orElseThrow(() -> new UnauthorizedException("Authenticated user could not be found"));
-        AccountEntity account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new NotFoundException("Account could not be found"));
-        if (!account.getUser().getId().equals(user.getId())) {
-            throw new ForbiddenException("You do not have access to this account");
-        }
+        AccountEntity account = accountService.getAccountAndVerifyOwner(accountId, user.getId());
 
         List<TransactionResponse> transactions = account.getTransactions()
                 .stream().map(this::toTransactionResponse)

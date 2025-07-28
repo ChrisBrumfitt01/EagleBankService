@@ -5,12 +5,11 @@ import com.eagle.EagleBankService.dto.CreatedTransactionResponse;
 import com.eagle.EagleBankService.entity.AccountEntity;
 import com.eagle.EagleBankService.entity.TransactionEntity;
 import com.eagle.EagleBankService.entity.UserEntity;
-import com.eagle.EagleBankService.exception.ForbiddenException;
-import com.eagle.EagleBankService.exception.NotFoundException;
 import com.eagle.EagleBankService.exception.UnauthorizedException;
 import com.eagle.EagleBankService.model.TransactionType;
 import com.eagle.EagleBankService.repository.AccountRepository;
 import com.eagle.EagleBankService.repository.TransactionRepository;
+import com.eagle.EagleBankService.service.AccountService;
 import com.eagle.EagleBankService.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,6 +38,7 @@ public class DepositStrategyTest {
     @Mock private UserService userService;
     @Mock private AccountRepository accountRepository;
     @Mock private TransactionRepository transactionRepository;
+    @Mock private AccountService accountService;
 
     @Captor private ArgumentCaptor<AccountEntity> accountCaptor;
     @Captor private ArgumentCaptor<TransactionEntity> transactionCaptor;
@@ -52,7 +52,7 @@ public class DepositStrategyTest {
         TransactionEntity savedTransaction = buildTransaction();
 
         when(userService.findUserByEmail(EMAIL)).thenReturn(Optional.of(user));
-        when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.of(account));
+        when(accountService.getAccountAndVerifyOwner(ACCOUNT_ID, user.getId())).thenReturn(account);
         when(transactionRepository.save(any())).thenReturn(savedTransaction);
 
         CreatedTransactionResponse response = depositStrategy.process(ACCOUNT_ID, EMAIL, new TransactionRequest(new BigDecimal(100), TransactionType.DEPOSIT));
@@ -72,37 +72,6 @@ public class DepositStrategyTest {
     public void process_shouldThrowUnauthorizedException_whenUserNotFound() {
         when(userService.findUserByEmail(EMAIL)).thenReturn(Optional.empty());
         assertThrows(UnauthorizedException.class, () -> {
-            depositStrategy.process(ACCOUNT_ID, EMAIL, new TransactionRequest(new BigDecimal(100), TransactionType.DEPOSIT));
-        });
-    }
-
-    @Test
-    public void process_shouldThrowNotFoundException_whenAccountNotFound() {
-        UserEntity user = buildUser();
-        AccountEntity account = buildAccount(user);
-
-        when(userService.findUserByEmail(EMAIL)).thenReturn(Optional.of(user));
-        when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.empty());
-
-        assertThrows(NotFoundException.class, () -> {
-            depositStrategy.process(ACCOUNT_ID, EMAIL, new TransactionRequest(new BigDecimal(100), TransactionType.DEPOSIT));
-        });
-    }
-
-    @Test
-    public void process_shouldThrowForbiddenException_whenAccountBelongsToDifferentUser() {
-        UserEntity user = buildUser();
-        AccountEntity account = AccountEntity.builder()
-                .id(UUID.randomUUID())
-                .accountNumber("12345678")
-                .balance(new BigDecimal(500))
-                .user(UserEntity.builder().id(UUID.randomUUID()).build())
-                .build();
-
-        when(userService.findUserByEmail(EMAIL)).thenReturn(Optional.of(user));
-        when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.of(account));
-
-        assertThrows(ForbiddenException.class, () -> {
             depositStrategy.process(ACCOUNT_ID, EMAIL, new TransactionRequest(new BigDecimal(100), TransactionType.DEPOSIT));
         });
     }

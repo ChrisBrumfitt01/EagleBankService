@@ -12,6 +12,7 @@ import com.eagle.EagleBankService.exception.UnprocessableException;
 import com.eagle.EagleBankService.model.TransactionType;
 import com.eagle.EagleBankService.repository.AccountRepository;
 import com.eagle.EagleBankService.repository.TransactionRepository;
+import com.eagle.EagleBankService.service.AccountService;
 import com.eagle.EagleBankService.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,6 +41,7 @@ public class WithdrawalStrategyTest {
     @Mock private UserService userService;
     @Mock private AccountRepository accountRepository;
     @Mock private TransactionRepository transactionRepository;
+    @Mock private AccountService accountService;
 
     @Captor
     private ArgumentCaptor<AccountEntity> accountCaptor;
@@ -55,7 +57,7 @@ public class WithdrawalStrategyTest {
         TransactionEntity savedTransaction = buildTransaction();
 
         when(userService.findUserByEmail(EMAIL)).thenReturn(Optional.of(user));
-        when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.of(account));
+        when(accountService.getAccountAndVerifyOwner(ACCOUNT_ID, user.getId())).thenReturn(account);
         when(transactionRepository.save(any())).thenReturn(savedTransaction);
 
         CreatedTransactionResponse response = withdrawalStrategy.process(ACCOUNT_ID, EMAIL,
@@ -79,7 +81,7 @@ public class WithdrawalStrategyTest {
         TransactionEntity savedTransaction = buildTransaction();
 
         when(userService.findUserByEmail(EMAIL)).thenReturn(Optional.of(user));
-        when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.of(account));
+        when(accountService.getAccountAndVerifyOwner(ACCOUNT_ID, user.getId())).thenReturn(account);
 
         assertThrows(UnprocessableException.class, () -> {
             withdrawalStrategy.process(ACCOUNT_ID, EMAIL,
@@ -95,36 +97,6 @@ public class WithdrawalStrategyTest {
         });
     }
 
-    @Test
-    public void process_shouldThrowNotFoundException_whenAccountNotFound() {
-        UserEntity user = buildUser();
-        AccountEntity account = buildAccount(user);
-
-        when(userService.findUserByEmail(EMAIL)).thenReturn(Optional.of(user));
-        when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.empty());
-
-        assertThrows(NotFoundException.class, () -> {
-            withdrawalStrategy.process(ACCOUNT_ID, EMAIL, new TransactionRequest(new BigDecimal(100), TransactionType.WITHDRAWAL));
-        });
-    }
-
-    @Test
-    public void process_shouldThrowForbiddenException_whenAccountBelongsToDifferentUser() {
-        UserEntity user = buildUser();
-        AccountEntity account = AccountEntity.builder()
-                .id(UUID.randomUUID())
-                .accountNumber("12345678")
-                .balance(new BigDecimal(500))
-                .user(UserEntity.builder().id(UUID.randomUUID()).build())
-                .build();
-
-        when(userService.findUserByEmail(EMAIL)).thenReturn(Optional.of(user));
-        when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.of(account));
-
-        assertThrows(ForbiddenException.class, () -> {
-            withdrawalStrategy.process(ACCOUNT_ID, EMAIL, new TransactionRequest(new BigDecimal(100), TransactionType.WITHDRAWAL));
-        });
-    }
 
     private UserEntity buildUser() {
         return UserEntity.builder()

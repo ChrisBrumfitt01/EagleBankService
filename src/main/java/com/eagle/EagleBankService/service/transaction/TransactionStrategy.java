@@ -11,6 +11,7 @@ import com.eagle.EagleBankService.exception.UnauthorizedException;
 import com.eagle.EagleBankService.model.TransactionType;
 import com.eagle.EagleBankService.repository.AccountRepository;
 import com.eagle.EagleBankService.repository.TransactionRepository;
+import com.eagle.EagleBankService.service.AccountService;
 import com.eagle.EagleBankService.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ import java.util.UUID;
 public abstract class TransactionStrategy {
 
     @Autowired private AccountRepository accountRepository;
+    @Autowired private AccountService accountService;
     @Autowired private TransactionRepository transactionRepository;
     @Autowired private UserService userService;
 
@@ -39,15 +41,7 @@ public abstract class TransactionStrategy {
     private AccountEntity validateRequestAndGetAccount(UUID accountId, String email) {
         UserEntity user = userService.findUserByEmail(email)
                 .orElseThrow(() -> new UnauthorizedException("Authenticated user could not be found"));
-
-        AccountEntity account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new NotFoundException("Account could not be found"));
-
-        if (!account.getUser().getId().equals(user.getId())) {
-            throw new ForbiddenException("You do not have access to this account");
-        }
-
-        return account;
+        return accountService.getAccountAndVerifyOwner(accountId, user.getId());
     }
 
     private TransactionEntity saveTransaction(AccountEntity account, TransactionRequest request) {

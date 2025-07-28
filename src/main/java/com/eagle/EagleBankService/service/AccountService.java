@@ -47,15 +47,17 @@ public class AccountService {
     public AccountResponse getAccount(UUID accountId, String email) {
         UserEntity user = userService.findUserByEmail(email)
                 .orElseThrow(() -> new UnauthorizedException("Authenticated user could not be found"));
+        AccountEntity account = getAccountAndVerifyOwner(accountId, user.getId());
+        return mapToResponse(account);
+    }
 
+    public AccountEntity getAccountAndVerifyOwner(UUID accountId, UUID userId) {
         AccountEntity account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new NotFoundException("Account could not be found"));
-
-        if (!account.getUser().getId().equals(user.getId())) {
+        if (!account.getUser().getId().equals(userId)) {
             throw new ForbiddenException("You do not have access to this account");
         }
-
-        return mapToResponse(account);
+        return account;
     }
 
     private AccountResponse mapToResponse(AccountEntity entity) {
