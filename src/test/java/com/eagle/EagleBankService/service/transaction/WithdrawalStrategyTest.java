@@ -5,8 +5,6 @@ import com.eagle.EagleBankService.dto.CreatedTransactionResponse;
 import com.eagle.EagleBankService.entity.AccountEntity;
 import com.eagle.EagleBankService.entity.TransactionEntity;
 import com.eagle.EagleBankService.entity.UserEntity;
-import com.eagle.EagleBankService.exception.ForbiddenException;
-import com.eagle.EagleBankService.exception.NotFoundException;
 import com.eagle.EagleBankService.exception.UnauthorizedException;
 import com.eagle.EagleBankService.exception.UnprocessableException;
 import com.eagle.EagleBankService.model.TransactionType;
