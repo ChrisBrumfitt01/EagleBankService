@@ -11,6 +11,7 @@ import com.eagle.EagleBankService.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -22,7 +23,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-
+    @Transactional
     public UserResponse createUser(UserRequest request) {
         UserEntity user = UserEntity.builder()
                 .fullName(request.getFullName())
@@ -38,7 +39,7 @@ public class UserService {
                 .email(user.getEmail())
                 .build();
     }
-
+    @Transactional
     public UserResponse updateUser(UUID userId, UpdateUserRequest request, String authenticatedEmail){
         UserEntity user = findUserAndValidate(userId, authenticatedEmail);
         user.setFullName(request.getFullName());
@@ -53,7 +54,7 @@ public class UserService {
                 .email(updated.getEmail())
                 .build();
     }
-
+    @Transactional
     public void deleteUser(UUID userId, String authenticatedEmail){
         UserEntity user = findUserAndValidate(userId, authenticatedEmail);
         if(!user.getAccounts().isEmpty()){
@@ -62,7 +63,7 @@ public class UserService {
 
         userRepository.delete(user);
     }
-
+    @Transactional(readOnly = true)
     public Optional<UserEntity> findUserByEmail(String email){
         return userRepository.findByEmail(email);
     }

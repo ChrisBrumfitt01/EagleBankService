@@ -12,8 +12,8 @@ import com.eagle.EagleBankService.model.TransactionType;
 import com.eagle.EagleBankService.repository.AccountRepository;
 import com.eagle.EagleBankService.repository.TransactionRepository;
 import com.eagle.EagleBankService.service.UserService;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 

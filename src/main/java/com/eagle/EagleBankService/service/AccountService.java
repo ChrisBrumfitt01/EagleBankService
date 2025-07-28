@@ -11,6 +11,7 @@ import com.eagle.EagleBankService.repository.AccountRepository;
 import com.eagle.EagleBankService.util.AccountNumberGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -21,7 +22,7 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final UserService userService;
     private final AccountNumberGenerator accountNumberGenerator;
-
+    @Transactional
     public AccountResponse createAccount(AccountRequest request, String authenticatedEmail) {
         UserEntity user = userService.findUserByEmail(authenticatedEmail)
                 .orElseThrow(() -> new UnauthorizedException("Authenticated user could not be found"));
@@ -42,7 +43,7 @@ public class AccountService {
                 .balance(account.getBalance())
                 .build();
     }
-
+    @Transactional(readOnly = true)
     public AccountResponse getAccount(UUID accountId, String email) {
         UserEntity user = userService.findUserByEmail(email)
                 .orElseThrow(() -> new UnauthorizedException("Authenticated user could not be found"));
