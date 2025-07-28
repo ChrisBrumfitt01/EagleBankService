@@ -1,7 +1,7 @@
 package com.eagle.EagleBankService.service.transaction;
 
 import com.eagle.EagleBankService.dto.TransactionRequest;
-import com.eagle.EagleBankService.dto.TransactionResponse;
+import com.eagle.EagleBankService.dto.CreatedTransactionResponse;
 import com.eagle.EagleBankService.entity.AccountEntity;
 import com.eagle.EagleBankService.entity.TransactionEntity;
 import com.eagle.EagleBankService.entity.UserEntity;
@@ -24,14 +24,14 @@ public abstract class TransactionStrategy {
     @Autowired private UserService userService;
 
     @Transactional
-    public TransactionResponse process(UUID accountId, String email, TransactionRequest request) {
+    public CreatedTransactionResponse process(UUID accountId, String email, TransactionRequest request) {
         AccountEntity account = validateRequestAndGetAccount(accountId, email);
 
         updateBalance(account, request);
         accountRepository.save(account);
 
         TransactionEntity transaction = saveTransaction(account, request);
-        return new TransactionResponse(transaction.getId(), account.getId(), request.getAmount(),
+        return new CreatedTransactionResponse(transaction.getId(), account.getId(), request.getAmount(),
                 request.getType(), account.getBalance());
 
     }

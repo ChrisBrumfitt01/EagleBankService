@@ -1,7 +1,7 @@
 package com.eagle.EagleBankService.service.transaction;
 
 import com.eagle.EagleBankService.dto.TransactionRequest;
-import com.eagle.EagleBankService.dto.TransactionResponse;
+import com.eagle.EagleBankService.dto.CreatedTransactionResponse;
 import com.eagle.EagleBankService.entity.AccountEntity;
 import com.eagle.EagleBankService.entity.TransactionEntity;
 import com.eagle.EagleBankService.entity.UserEntity;
@@ -30,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
 @ExtendWith(MockitoExtension.class)
 public class WithdrawalStrategyTest {
 
@@ -57,7 +58,7 @@ public class WithdrawalStrategyTest {
         when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.of(account));
         when(transactionRepository.save(any())).thenReturn(savedTransaction);
 
-        TransactionResponse response = withdrawalStrategy.process(ACCOUNT_ID, EMAIL,
+        CreatedTransactionResponse response = withdrawalStrategy.process(ACCOUNT_ID, EMAIL,
                 new TransactionRequest(new BigDecimal(100), TransactionType.WITHDRAWAL));
 
         verify(accountRepository).save(accountCaptor.capture());

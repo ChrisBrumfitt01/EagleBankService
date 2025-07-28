@@ -1,7 +1,7 @@
 package com.eagle.EagleBankService.service;
 
 import com.eagle.EagleBankService.dto.TransactionRequest;
-import com.eagle.EagleBankService.dto.TransactionResponse;
+import com.eagle.EagleBankService.dto.CreatedTransactionResponse;
 import com.eagle.EagleBankService.model.TransactionType;
 import com.eagle.EagleBankService.service.transaction.TransactionStrategy;
 import com.eagle.EagleBankService.service.transaction.TransactionStrategyFactory;
@@ -36,13 +36,13 @@ public class TransactionServiceTest {
     void createTransaction_shouldDelegateToCorrectStrategyForDeposit() {
         TransactionRequest request = new TransactionRequest(new BigDecimal("100"), TransactionType.DEPOSIT);
 
-        TransactionResponse expectedResponse = new TransactionResponse(UUID.randomUUID(), ACCOUNT_ID,
+        CreatedTransactionResponse expectedResponse = new CreatedTransactionResponse(UUID.randomUUID(), ACCOUNT_ID,
                 new BigDecimal("100"), TransactionType.DEPOSIT, new BigDecimal("1100"));
 
         when(strategyFactory.getStrategy(TransactionType.DEPOSIT)).thenReturn(depositStrategy);
         when(depositStrategy.process(ACCOUNT_ID, EMAIL, request)).thenReturn(expectedResponse);
 
-        TransactionResponse actual = transactionService.createTransaction(ACCOUNT_ID, EMAIL, request);
+        CreatedTransactionResponse actual = transactionService.createTransaction(ACCOUNT_ID, EMAIL, request);
 
         assertThat(actual).isEqualTo(expectedResponse);
         verify(strategyFactory).getStrategy(TransactionType.DEPOSIT);

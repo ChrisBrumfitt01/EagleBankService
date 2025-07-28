@@ -1,7 +1,7 @@
 package com.eagle.EagleBankService.service.transaction;
 
 import com.eagle.EagleBankService.dto.TransactionRequest;
-import com.eagle.EagleBankService.dto.TransactionResponse;
+import com.eagle.EagleBankService.dto.CreatedTransactionResponse;
 import com.eagle.EagleBankService.entity.AccountEntity;
 import com.eagle.EagleBankService.entity.TransactionEntity;
 import com.eagle.EagleBankService.entity.UserEntity;
@@ -55,7 +55,7 @@ public class DepositStrategyTest {
         when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.of(account));
         when(transactionRepository.save(any())).thenReturn(savedTransaction);
 
-        TransactionResponse response = depositStrategy.process(ACCOUNT_ID, EMAIL, new TransactionRequest(new BigDecimal(100), TransactionType.DEPOSIT));
+        CreatedTransactionResponse response = depositStrategy.process(ACCOUNT_ID, EMAIL, new TransactionRequest(new BigDecimal(100), TransactionType.DEPOSIT));
 
         verify(accountRepository).save(accountCaptor.capture());
         assertThat(accountCaptor.getValue().getBalance()).isEqualTo(new BigDecimal(600));
