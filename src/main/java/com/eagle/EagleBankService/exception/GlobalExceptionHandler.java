@@ -40,8 +40,14 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(UnauthorizedException.class)
-    public ResponseEntity<ErrorResponse> handleUnauthorized(UnauthorizedException ex) {
+    public ResponseEntity<ErrorResponse> handleUnauthorizedException(UnauthorizedException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new ErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage()));
+    }
+
+    @ExceptionHandler(UnprocessableException.class)
+    public ResponseEntity<ErrorResponse> handleUnprocessableException(UnauthorizedException ex) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(new ErrorResponse(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage()));
     }
 }

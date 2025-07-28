@@ -1,0 +1,135 @@
+package com.eagle.EagleBankService.service.transaction;
+
+import com.eagle.EagleBankService.dto.TransactionRequest;
+import com.eagle.EagleBankService.dto.TransactionResponse;
+import com.eagle.EagleBankService.entity.AccountEntity;
+import com.eagle.EagleBankService.entity.TransactionEntity;
+import com.eagle.EagleBankService.entity.UserEntity;
+import com.eagle.EagleBankService.exception.ForbiddenException;
+import com.eagle.EagleBankService.exception.NotFoundException;
+import com.eagle.EagleBankService.exception.UnauthorizedException;
+import com.eagle.EagleBankService.model.TransactionType;
+import com.eagle.EagleBankService.repository.AccountRepository;
+import com.eagle.EagleBankService.repository.TransactionRepository;
+import com.eagle.EagleBankService.service.UserService;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.math.BigDecimal;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+public class DepositStrategyTest {
+
+    private static final UUID ACCOUNT_ID = UUID.randomUUID();
+    private static final String EMAIL = "joebloggs@test.com";
+
+    @Mock private UserService userService;
+    @Mock private AccountRepository accountRepository;
+    @Mock private TransactionRepository transactionRepository;
+
+    @Captor private ArgumentCaptor<AccountEntity> accountCaptor;
+    @Captor private ArgumentCaptor<TransactionEntity> transactionCaptor;
+
+    @InjectMocks private DepositStrategy depositStrategy;
+
+    @Test
+    public void process_shouldUpdateAccount_andCreateTransactionSuccessfully() {
+        UserEntity user = buildUser();
+        AccountEntity account = buildAccount(user);
+        TransactionEntity savedTransaction = buildTransaction();
+
+        when(userService.findUserByEmail(EMAIL)).thenReturn(Optional.of(user));
+        when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.of(account));
+        when(transactionRepository.save(any())).thenReturn(savedTransaction);
+
+        TransactionResponse response = depositStrategy.process(ACCOUNT_ID, EMAIL, new TransactionRequest(new BigDecimal(100), TransactionType.DEPOSIT));
+
+        verify(accountRepository).save(accountCaptor.capture());
+        assertThat(accountCaptor.getValue().getBalance()).isEqualTo(new BigDecimal(600));
+
+        verify(transactionRepository).save(transactionCaptor.capture());
+        TransactionEntity actualTransaction = transactionCaptor.getValue();
+        assertThat(actualTransaction.getType()).isEqualTo(TransactionType.DEPOSIT);
+        assertThat(actualTransaction.getAmount()).isEqualTo(new BigDecimal(100));
+
+        assertThat(response.getTransactionId()).isEqualTo(savedTransaction.getId());
+    }
+
+    @Test
+    public void process_shouldThrowUnauthorizedException_whenUserNotFound() {
+        when(userService.findUserByEmail(EMAIL)).thenReturn(Optional.empty());
+        assertThrows(UnauthorizedException.class, () -> {
+            depositStrategy.process(ACCOUNT_ID, EMAIL, new TransactionRequest(new BigDecimal(100), TransactionType.DEPOSIT));
+        });
+    }
+
+    @Test
+    public void process_shouldThrowNotFoundException_whenAccountNotFound() {
+        UserEntity user = buildUser();
+        AccountEntity account = buildAccount(user);
+
+        when(userService.findUserByEmail(EMAIL)).thenReturn(Optional.of(user));
+        when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> {
+            depositStrategy.process(ACCOUNT_ID, EMAIL, new TransactionRequest(new BigDecimal(100), TransactionType.DEPOSIT));
+        });
+    }
+
+    @Test
+    public void process_shouldThrowForbiddenException_whenAccountBelongsToDifferentUser() {
+        UserEntity user = buildUser();
+        AccountEntity account = AccountEntity.builder()
+                .id(UUID.randomUUID())
+                .accountNumber("12345678")
+                .balance(new BigDecimal(500))
+                .user(UserEntity.builder().id(UUID.randomUUID()).build())
+                .build();
+
+        when(userService.findUserByEmail(EMAIL)).thenReturn(Optional.of(user));
+        when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.of(account));
+
+        assertThrows(ForbiddenException.class, () -> {
+            depositStrategy.process(ACCOUNT_ID, EMAIL, new TransactionRequest(new BigDecimal(100), TransactionType.DEPOSIT));
+        });
+    }
+
+    private UserEntity buildUser() {
+        return UserEntity.builder()
+                .id(UUID.randomUUID())
+                .email(EMAIL)
+                .build();
+    }
+
+    private AccountEntity buildAccount(UserEntity user) {
+        return AccountEntity.builder()
+                .id(UUID.randomUUID())
+                .accountNumber("12345678")
+                .balance(new BigDecimal(500))
+                .user(user)
+                .build();
+
+    }
+
+    private TransactionEntity buildTransaction() {
+        return TransactionEntity.builder()
+                .id(UUID.randomUUID())
+                .type(TransactionType.DEPOSIT)
+                .amount(new BigDecimal(100))
+                .build();
+
+    }
+}
