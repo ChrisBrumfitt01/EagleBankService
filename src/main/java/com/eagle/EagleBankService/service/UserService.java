@@ -9,6 +9,7 @@ import com.eagle.EagleBankService.exception.ForbiddenException;
 import com.eagle.EagleBankService.exception.NotFoundException;
 import com.eagle.EagleBankService.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserService {
 
     private final UserRepository userRepository;
@@ -70,8 +72,12 @@ public class UserService {
 
     private UserEntity findUserAndValidate(UUID userId, String authenticatedEmail) {
         UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException(String.format("User not found with the ID: %s", userId)));
+                .orElseThrow(() -> {
+                    log.warn("Could not find user with ID {}. Throwing NotFoundException.", userId);
+                    return new NotFoundException(String.format("User not found with the ID: %s", userId));
+                });
         if (!user.getEmail().equals(authenticatedEmail)) {
+            log.warn("User email of {} does not match authenticated user email of {}. Throwing ForbiddenException.", user.getEmail(), authenticatedEmail);
             throw new ForbiddenException("Operation forbidden: Different user");
         }
         return user;
