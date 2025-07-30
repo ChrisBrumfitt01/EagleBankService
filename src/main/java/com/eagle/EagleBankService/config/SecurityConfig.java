@@ -16,8 +16,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import java.util.List;
+
 @Configuration
 public class SecurityConfig {
+
     @Autowired
     private AuthEntryPointJwt unauthorizedHandler;
     @Bean
@@ -49,11 +52,13 @@ public class SecurityConfig {
                         authorizeRequests
                                 .requestMatchers("/v1/auth/login", "/h2-console/**").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/v1/users").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/swagger-ui/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/v3/**").permitAll()
                                 .anyRequest().authenticated()
                 );
+
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
-
 
 }

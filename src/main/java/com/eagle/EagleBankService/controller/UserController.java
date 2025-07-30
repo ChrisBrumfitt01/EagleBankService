@@ -4,6 +4,7 @@ import com.eagle.EagleBankService.dto.UpdateUserRequest;
 import com.eagle.EagleBankService.dto.UserRequest;
 import com.eagle.EagleBankService.dto.UserResponse;
 import com.eagle.EagleBankService.service.UserService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +19,7 @@ import java.util.UUID;
 @RequestMapping("/v1/users")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Users")
 public class UserController {
 
     private final UserService userService;
