@@ -81,18 +81,15 @@ public class WithdrawalStrategyTest {
         when(userService.findUserByEmail(EMAIL)).thenReturn(Optional.of(user));
         when(accountService.getAccountAndVerifyOwner(ACCOUNT_ID, user.getId())).thenReturn(account);
 
-        assertThrows(UnprocessableException.class, () -> {
-            withdrawalStrategy.process(ACCOUNT_ID, EMAIL,
-                    new TransactionRequest(new BigDecimal(999999), TransactionType.WITHDRAWAL));
-        });
+        assertThrows(UnprocessableException.class, () -> withdrawalStrategy.process(ACCOUNT_ID, EMAIL,
+                new TransactionRequest(new BigDecimal(999999), TransactionType.WITHDRAWAL)));
     }
 
     @Test
     public void process_shouldThrowUnauthorizedException_whenUserNotFound() {
         when(userService.findUserByEmail(EMAIL)).thenReturn(Optional.empty());
-        assertThrows(UnauthorizedException.class, () -> {
-            withdrawalStrategy.process(ACCOUNT_ID, EMAIL, new TransactionRequest(new BigDecimal(100), TransactionType.WITHDRAWAL));
-        });
+        assertThrows(UnauthorizedException.class, () ->
+                withdrawalStrategy.process(ACCOUNT_ID, EMAIL, new TransactionRequest(new BigDecimal(100), TransactionType.WITHDRAWAL)));
     }
 
 

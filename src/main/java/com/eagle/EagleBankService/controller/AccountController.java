@@ -2,7 +2,6 @@ package com.eagle.EagleBankService.controller;
 
 import com.eagle.EagleBankService.dto.AccountRequest;
 import com.eagle.EagleBankService.dto.AccountResponse;
-import com.eagle.EagleBankService.dto.AuthResponse;
 import com.eagle.EagleBankService.dto.ErrorResponse;
 import com.eagle.EagleBankService.service.AccountService;
 import io.swagger.v3.oas.annotations.Operation;

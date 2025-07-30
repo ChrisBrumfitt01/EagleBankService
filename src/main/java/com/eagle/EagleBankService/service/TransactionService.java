@@ -26,7 +26,6 @@ public class TransactionService {
     private final TransactionStrategyFactory strategyFactory;
     private final UserService userService;
     private final AccountService accountService;
-    private final AccountRepository accountRepository;
     @Transactional
     public CreatedTransactionResponse createTransaction(UUID accountId, String email, TransactionRequest request) {
         TransactionStrategy strategy = strategyFactory.getStrategy(request.getType());

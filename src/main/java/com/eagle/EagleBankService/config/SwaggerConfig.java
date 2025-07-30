@@ -13,6 +13,6 @@ public class SwaggerConfig {
                 .info(new Info()
                         .title("Eagle Bank API")
                         .version("1.0")
-                        .description("Documentation of the Eagle Bank API using Swagger OpenAPI"));
+                        .description("Documentation for the Eagle Bank API using Swagger OpenAPI"));
     }
 }
