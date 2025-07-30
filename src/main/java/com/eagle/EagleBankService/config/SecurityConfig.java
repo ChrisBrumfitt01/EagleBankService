@@ -47,7 +47,7 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers("/v1/auth/login", "/dev/h2-console/**").permitAll()
+                                .requestMatchers("/v1/auth/login", "/h2-console/**").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/v1/users").permitAll()
                                 .anyRequest().authenticated()
                 );
